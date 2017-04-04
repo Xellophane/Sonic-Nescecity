@@ -1,0 +1,5 @@
+Immediate things to fix
+  - Fix local queueing
+  - Add in youtube functionality
+  - Make album selection pretty
+  - Recursive !commands command?
