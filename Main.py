@@ -41,12 +41,11 @@ class VoiceEntry:
         self.player = player
 
     def __str__(self):
-        fmt = 'requested by {1.display_name}'
+        fmt = '{0.player} requested by {1.display_name}'
         # duration = self.player.duration
         # if duration:
             # fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
         return fmt.format(self.player, self.requester)
-
 class VoiceState:
     def __init__(self, bot):
         self.current = None
@@ -189,12 +188,11 @@ class Music:
                 return
 
         try:
-            player = state.voice.create_ffmpeg_player(self.album.songs[self.song])
+            player = state.voice.create_ffmpeg_player(self.album.songs[self.song], after=state.toggle_next)
         except Exception as e:
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
             await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
         else:
-            player.volume = 0.6
             entry = VoiceEntry(ctx.message, player)
             await self.bot.say('Enqueued ' + str(entry))
             await state.songs.put(entry)
