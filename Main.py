@@ -26,11 +26,11 @@ class Album:
         it will be to allow the entire album to be loaded, queued, and maybe shuffled"""
 
         self.name = name
-        self.music_directory = "D:/Music/" + name + "/FLAC/" # directory where the music is held. Note that python should convert to windows and unix
+        self.music_directory = "/Music/" + name + "/MP3/" # directory where the music is held. Note that python should convert to windows and unix
         print(self.name)
         # This should be the meat and potatoes, as it should grab everything in the FLAC directory and put it into a list.
 
-        self.songs = glob.glob(self.music_directory + "*.flac")
+        self.songs = glob.glob(self.music_directory + "*.mp3")
 
 
 
