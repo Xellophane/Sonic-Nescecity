@@ -13,8 +13,9 @@ if not discord.opus.is_loaded():
     # opus library is located in and with the proper filename.
     # note that on windows this DLL is automatically provided for you
     discord.opus.load_opus('opus')
-music_directory = 'D:/Music/'
+music_directory = '/Music/'
 class Library:
+    """Object to hold all the albums"""
     def __init__(self):
         self.albums = os.listdir(music_directory)
         print(self.albums)
