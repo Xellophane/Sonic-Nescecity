@@ -13,12 +13,14 @@ if not discord.opus.is_loaded():
     # opus library is located in and with the proper filename.
     # note that on windows this DLL is automatically provided for you
     discord.opus.load_opus('opus')
-music_directory = '/Music/'
+
+music_path = 'A:\\Music'
+# music_directory = '/Music/'
 class Library:
     """Object to hold all the albums"""
     def __init__(self):
-        self.albums = os.listdir(music_directory)
-        print(self.albums)
+        # self.albums = os.listdir(music_directory)
+        self.albums = os.listdir(music_path)
 
 class Album:
     def __init__(self, name):
@@ -26,9 +28,9 @@ class Album:
         it will be to allow the entire album to be loaded, queued, and maybe shuffled"""
 
         self.name = name
-        self.music_directory = "/Music/" + name + "/MP3/" # directory where the music is held. Note that python should convert to windows and unix
+        self.music_directory = os.path.join(music_path, name, "MP3\\") # directory where the music is held. Note that python should convert to windows and unix
         print(self.name)
-        # This should be the meat and potatoes, as it should grab everything in the FLAC directory and put it into a list.
+        # This should be the meat and potatoes, as it should grab everything in the albums FLAC/MP3 directory and put it into a list.
 
         self.songs = glob.glob(self.music_directory + "*.mp3")
 
@@ -41,11 +43,13 @@ class VoiceEntry:
         self.player = player
 
     def __str__(self):
-        fmt = '{0.player} requested by {1.display_name}'
+        fmt = '{0.player} requested by {1.display_name}' # Something to do with strings? iono
         # duration = self.player.duration
         # if duration:
             # fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
         return fmt.format(self.player, self.requester)
+
+# this class allows the bot to exist in multiple servers.
 class VoiceState:
     def __init__(self, bot):
         self.current = None
@@ -56,6 +60,7 @@ class VoiceState:
         self.skip_votes = set() # a set of user_ids that voted
         self.audio_player = self.bot.loop.create_task(self.audio_player_task())
 
+    # getters and setters stuff
     def is_playing(self):
         if self.voice is None or self.current is None:
             return False
@@ -83,6 +88,7 @@ class VoiceState:
             self.current.player.start()
             await self.play_next_song.wait()
 
+# actuall bot commands 'n stuff'
 class Music:
     """Voice related commands.
     Works in multiple servers at once.
@@ -115,7 +121,10 @@ class Music:
             except:
                 pass
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
+    asynd def commands(self, ctx)
+
+    @commands.command(pass_context=True)
     async def join(self, ctx, *, channel : discord.Channel):
         """Joins a voice channel."""
         try:
@@ -127,7 +136,7 @@ class Music:
         else:
             await self.bot.say('Ready to play audio in ' + channel.name)
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def summon(self, ctx):
         """Summons the bot to join your voice channel."""
         summoned_channel = ctx.message.author.voice_channel
@@ -143,30 +152,30 @@ class Music:
 
         return True
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def banish(self, ctx):
         """Banish the bot from all servers it's a part of and logs it out"""
         await bot.logout()
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def list_cwd(self, ctx):
         """Returns all the files matching search entry"""
         cwd = glob.glob('*.flac')
         await self.bot.send_message(ctx.message.channel, glob.glob('*.flac'))
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def chalbum(self, ctx, albumnumber):
         number = int(albumnumber)
         """Changes the album to inputed album, does not do if album doesn't exist"""
         self.album = Album(self.library.albums[number])
         await self.bot.send_message(ctx.message.channel, os.listdir(self.album.music_directory))
-        print(self.album.songs)
+        # TODO: add in meta data for song titles.
 
     @commands.command(pass_context=True)
     async def list_albums(self, ctx):
         await self.bot.send_message(ctx.message.channel, self.library.albums)
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def play(self, ctx, *, song : str):
         """Plays a song.
         If there is a song currently in the queue, then it is
@@ -197,7 +206,7 @@ class Music:
             await self.bot.say('Enqueued ' + str(entry))
             await state.songs.put(entry)
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def volume(self, ctx, value : int):
         """Sets the volume of the currently playing song."""
 
@@ -207,7 +216,7 @@ class Music:
             player.volume = value / 100
             await self.bot.say('Set the volume to {:.0%}'.format(player.volume))
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def pause(self, ctx):
         """Pauses the currently played song."""
         state = self.get_voice_state(ctx.message.server)
@@ -215,7 +224,7 @@ class Music:
             player = state.player
             player.pause()
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def resume(self, ctx):
         """Resumes the currently played song."""
         state = self.get_voice_state(ctx.message.server)
@@ -223,7 +232,7 @@ class Music:
             player = state.player
             player.resume()
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def stop(self, ctx):
         """Stops playing audio and leaves the voice channel.
         This also clears the queue.
@@ -242,7 +251,7 @@ class Music:
         except:
             pass
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def skip(self, ctx):
         """Vote to skip a song. The song requester can automatically skip.
         3 skip votes are needed for the song to be skipped.
@@ -268,7 +277,7 @@ class Music:
         else:
             await self.bot.say('You have already voted to skip this song.')
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True)
     async def playing(self, ctx):
         """Shows info about the currently played song."""
 

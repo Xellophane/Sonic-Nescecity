@@ -1,9 +1,9 @@
+Version 0.05
+Finished
+  + Fix Local Queueing
 Immediate things to fix
-  - Fix local queueing
-<<<<<<< HEAD
-    - Fix hanging finished player
-=======
->>>>>>> 68880e8625c0744d219bf84c4c2932392b80dd5e
   - Add in youtube functionality
   - Make album selection pretty
+    - Requires mutagen (grumble grumble)
+      - Requires Linux (grumble grumble grumble)
   - Recursive !commands command?
