@@ -20,7 +20,7 @@ class Library:
     """Object to hold all the albums"""
     def __init__(self):
         # self.albums = os.listdir(music_directory)
-        self.albums = os.listdir(music_path)
+        self.albums = []
 
 class Album:
     def __init__(self, name):
@@ -121,8 +121,9 @@ class Music:
             except:
                 pass
 
-    @commands.command(pass_context=True)
-    asynd def commands(self, ctx)
+    # @commands.command(pass_context=True)
+    # async def commands(self, ctx):
+        # pass
 
     @commands.command(pass_context=True)
     async def join(self, ctx, *, channel : discord.Channel):
@@ -184,6 +185,7 @@ class Music:
         The list of supported sites can be found here:
         https://rg3.github.io/youtube-dl/supportedsites.html
         """
+        print(song)
         state = self.get_voice_state(ctx.message.server)
         opts = {
             'default_search': 'auto',
@@ -295,5 +297,10 @@ bot.add_cog(Music(bot))
 async def on_ready():
     print('Logged in as: \n{0} (ID: {0.id})'.format(bot.user))
 
+pfile = open("Password.txt", "r")
+password = pfile.readline()
+pfile.close()
+password = password.rstrip()
+password = str(password)
 
-bot.run('MjkxNzI4NzgzNDMyNDgyODE3.C6uK_w.fNXczWwLNeQwqtsrLxcmQ62nlQs')
+bot.run(password)
