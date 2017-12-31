@@ -14,13 +14,11 @@ if not discord.opus.is_loaded():
     # note that on windows this DLL is automatically provided for you
     discord.opus.load_opus('opus')
 
-music_path = 'A:\\Music'
-# music_directory = '/Music/'
+music_directory = '/home/kogatlas/Music/'
 class Library:
     """Object to hold all the albums"""
     def __init__(self):
-        # self.albums = os.listdir(music_directory)
-        self.albums = []
+        self.albums = os.listdir(music_directory)
 
 class Album:
     def __init__(self, name):
@@ -28,10 +26,8 @@ class Album:
         it will be to allow the entire album to be loaded, queued, and maybe shuffled"""
 
         self.name = name
-        self.music_directory = os.path.join(music_path, name, "MP3\\") # directory where the music is held. Note that python should convert to windows and unix
-        print(self.name)
+        self.music_directory = os.path.join(music_directory, name, "MP3/") # directory where the music is held. Note that python should convert to windows and unix
         # This should be the meat and potatoes, as it should grab everything in the albums FLAC/MP3 directory and put it into a list.
-
         self.songs = glob.glob(self.music_directory + "*.mp3")
 
 
@@ -169,6 +165,8 @@ class Music:
         number = int(albumnumber)
         """Changes the album to inputed album, does not do if album doesn't exist"""
         self.album = Album(self.library.albums[number])
+        print(self.album)
+        # self.album.songs = os.listdir(self.album.music_directory)
         await self.bot.send_message(ctx.message.channel, os.listdir(self.album.music_directory))
         # TODO: add in meta data for song titles.
 
@@ -199,8 +197,10 @@ class Music:
                 return
 
         try:
+            print(self.album.songs)
             player = state.voice.create_ffmpeg_player(self.album.songs[self.song], after=state.toggle_next)
         except Exception as e:
+            # print(self.album.music_directory)
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
             await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
         else:
