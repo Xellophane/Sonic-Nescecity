@@ -167,7 +167,14 @@ class Music:
 
     @commands.command(pass_context=True)
     async def chalbum(self, ctx, albumnumber):
-        number = int(albumnumber)
+        if albumnumber.isdigit():
+            number = int(albumnumber)
+            # self.album = int(albumnumber)
+        else:
+            for idx, item in enumerate(self.library.albums):
+                itemTitle = item[item.rfind('/') + 1:]
+                if albumnumber.lower() in itemTitle.lower():
+                    number = idx
         """Changes the album to inputed album, does not do if album doesn't exist"""
         self.album = Album(self.library.albums[number])
         await self.bot.send_message(ctx.message.channel, os.listdir(self.album.music_directory))
@@ -175,6 +182,10 @@ class Music:
 
     @commands.command(pass_context=True)
     async def list_albums(self, ctx):
+        await self.bot.send_message(ctx.message.channel, self.library.albums)
+
+    @commands.command(pass_context=True)
+    async def albums(self, ctx):
         await self.bot.send_message(ctx.message.channel, self.library.albums)
 
     @commands.command(pass_context=True)
@@ -306,6 +317,13 @@ class Music:
 
     @commands.command(pass_context=True)
     async def list_songs(self, ctx):
+        prettyAlbum = []
+        for item in self.album.songs:
+            prettyAlbum.append(item[item.rfind('/') + 1:])
+        await self.bot.send_message(ctx.message.channel, prettyAlbum)
+
+    @commands.command(pass_context=True)
+    async def songs(self, ctx):
         prettyAlbum = []
         for item in self.album.songs:
             prettyAlbum.append(item[item.rfind('/') + 1:])
