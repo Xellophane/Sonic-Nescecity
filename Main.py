@@ -80,7 +80,12 @@ class VoiceState:
         while True:
             self.play_next_song.clear()
             self.current = await self.songs.get()
-            await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current))
+            # print(self.song)
+            # print(self.current)
+            print(str(self.songs.get()))
+            print(repr(self.songs.get()))
+            # await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current))
+            # await self.bot.send_message(self.current.channel, 'Now playing ' + self)
             self.current.player.start()
             await self.play_next_song.wait()
 
@@ -165,8 +170,6 @@ class Music:
         number = int(albumnumber)
         """Changes the album to inputed album, does not do if album doesn't exist"""
         self.album = Album(self.library.albums[number])
-        print(self.album)
-        # self.album.songs = os.listdir(self.album.music_directory)
         await self.bot.send_message(ctx.message.channel, os.listdir(self.album.music_directory))
         # TODO: add in meta data for song titles.
 
@@ -183,30 +186,39 @@ class Music:
         The list of supported sites can be found here:
         https://rg3.github.io/youtube-dl/supportedsites.html
         """
-        print(song)
         state = self.get_voice_state(ctx.message.server)
+        self.song = '';
         opts = {
             'default_search': 'auto',
             'quiet': True,
         }
-        self.song = int(song)
+
+        if song.isdigit():
+            self.song = int(song)
+        else:
+            for idx, item in enumerate(self.album.songs):
+                itemTitle = item[item.rfind('/') + 1:]
+                if song.lower() in itemTitle.lower():
+                    self.song = idx
 
         if state.voice is None:
             success = await ctx.invoke(self.summon)
             if not success:
                 return
 
-        try:
-            print(self.album.songs)
-            player = state.voice.create_ffmpeg_player(self.album.songs[self.song], after=state.toggle_next)
-        except Exception as e:
-            # print(self.album.music_directory)
-            fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
-            await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
+        if type(self.song) == int:
+            try:
+                player = state.voice.create_ffmpeg_player(self.album.songs[self.song], after=state.toggle_next)
+            except Exception as e:
+                fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
+                await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
+            else:
+                entry = VoiceEntry(ctx.message, player)
+                prettySong = self.album.songs[self.song][item.rfind('/') + 1:]
+                await self.bot.say('Enqueued ' + prettySong[:prettySong.rfind('.')])
+                await state.songs.put(entry)
         else:
-            entry = VoiceEntry(ctx.message, player)
-            await self.bot.say('Enqueued ' + str(entry))
-            await state.songs.put(entry)
+            await self.bot.send_message(ctx.message.channel, "No song matching your request was found.")
 
     @commands.command(pass_context=True)
     async def volume(self, ctx, value : int):
@@ -288,7 +300,16 @@ class Music:
             await self.bot.say('Not playing anything.')
         else:
             skip_count = len(state.skip_votes)
-            await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current, skip_count))
+            song = self.album.songs[self.song]
+            prettySong = song[song.rfind('/') + 1:]
+            await self.bot.say('Now playing {} [skips: {}/3]'.format(prettySong[:prettySong.rfind('.')], skip_count))
+
+    @commands.command(pass_context=True)
+    async def list_songs(self, ctx):
+        prettyAlbum = []
+        for item in self.album.songs:
+            prettyAlbum.append(item[item.rfind('/') + 1:])
+        await self.bot.send_message(ctx.message.channel, prettyAlbum)
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), description='A playlist example for discord.py')
 bot.add_cog(Music(bot))
