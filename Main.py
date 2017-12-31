@@ -19,8 +19,8 @@ music_path = 'A:\\Music'
 class Library:
     """Object to hold all the albums"""
     def __init__(self):
-        # self.albums = os.listdir(music_directory)
-        self.albums = []
+        self.albums = os.listdir(music_path)
+        # self.albums = []
 
 class Album:
     def __init__(self, name):
@@ -175,6 +175,10 @@ class Music:
     @commands.command(pass_context=True)
     async def list_albums(self, ctx):
         await self.bot.send_message(ctx.message.channel, self.library.albums)
+
+    @commands.command(pass_context=True)
+    async def list_songs(self, ctx):
+        await self.bot.send_message(ctx.message.channel, self.album.songs)
 
     @commands.command(pass_context=True)
     async def play(self, ctx, *, song : str):
