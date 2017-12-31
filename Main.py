@@ -82,8 +82,8 @@ class VoiceState:
             self.current = await self.songs.get()
             # print(self.song)
             # print(self.current)
-            print(str(self.songs.get()))
-            print(repr(self.songs.get()))
+            # print(str(self.songs.get()))
+            # print(repr(self.songs.get()))
             # await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current))
             # await self.bot.send_message(self.current.channel, 'Now playing ' + self)
             self.current.player.start()
@@ -167,6 +167,8 @@ class Music:
 
     @commands.command(pass_context=True)
     async def chalbum(self, ctx, albumnumber):
+        """ Changes to selected album by name or index
+        """
         if albumnumber.isdigit():
             number = int(albumnumber)
             # self.album = int(albumnumber)
@@ -182,10 +184,16 @@ class Music:
 
     @commands.command(pass_context=True)
     async def list_albums(self, ctx):
+        """ Lists available albums.
+        Same as !albums.
+        """
         await self.bot.send_message(ctx.message.channel, self.library.albums)
 
     @commands.command(pass_context=True)
     async def albums(self, ctx):
+        """ Lists available albums.
+        Same as !list_albums.
+        """
         await self.bot.send_message(ctx.message.channel, self.library.albums)
 
     @commands.command(pass_context=True)
@@ -193,9 +201,6 @@ class Music:
         """Plays a song.
         If there is a song currently in the queue, then it is
         queued until the next song is done playing.
-        This command automatically searches as well from YouTube.
-        The list of supported sites can be found here:
-        https://rg3.github.io/youtube-dl/supportedsites.html
         """
         state = self.get_voice_state(ctx.message.server)
         self.song = '';
@@ -230,6 +235,36 @@ class Music:
                 await state.songs.put(entry)
         else:
             await self.bot.send_message(ctx.message.channel, "No song matching your request was found.")
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def search(self, ctx, *, song : str):
+        """Searches YouTube for a song matching your request.
+        If there is a song currently in the queue, then it is
+        queued until the next song is done playing.
+        The list of supported sites can be found here:
+        https://rg3.github.io/youtube-dl/supportedsites.html
+        """
+        state = self.get_voice_state(ctx.message.server)
+        opts = {
+            'default_search': 'auto',
+            'quiet': True,
+        }
+
+        if state.voice is None:
+            success = await ctx.invoke(self.summon)
+            if not success:
+                return
+
+        try:
+            player = await state.voice.create_ytdl_player(song, ytdl_options=opts, after=state.toggle_next)
+        except Exception as e:
+            fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
+            await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
+        else:
+            player.volume = 0.6
+            entry = VoiceEntry(ctx.message, player)
+            await self.bot.say('Enqueued ' + str(entry))
+            await state.songs.put(entry)
 
     @commands.command(pass_context=True)
     async def volume(self, ctx, value : int):
@@ -317,6 +352,9 @@ class Music:
 
     @commands.command(pass_context=True)
     async def list_songs(self, ctx):
+        """ Lists available songs for current album.
+        Same as !songs.
+        """
         prettyAlbum = []
         for item in self.album.songs:
             prettyAlbum.append(item[item.rfind('/') + 1:])
@@ -324,6 +362,9 @@ class Music:
 
     @commands.command(pass_context=True)
     async def songs(self, ctx):
+        """ Lists available songs for current album.
+        Same as !list_songs.
+        """
         prettyAlbum = []
         for item in self.album.songs:
             prettyAlbum.append(item[item.rfind('/') + 1:])
