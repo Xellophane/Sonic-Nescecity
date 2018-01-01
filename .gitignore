@@ -139,5 +139,13 @@ $RECYCLE.BIN/
 *.lnk
 
 
-# Password File
-Password.txt
+# Music files
+*.png
+*.mp3
+*Lyrics.txt
+*.url
+*.jpg
+*.txt
+
+# Database Files
+*.db
