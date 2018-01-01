@@ -80,7 +80,14 @@ class VoiceState:
         while True:
             self.play_next_song.clear()
             self.current = await self.songs.get()
-            await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current.player.url))
+            # print(self.current)
+            # print(str(self.current))
+            # print(dir(self.current.player))
+            # print(vars(self.current.player))
+            if hasattr(self.current.player, 'url'):
+                await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current.player.url))
+            else:
+                await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current.player.getName()))
             self.current.player.start()
             await self.play_next_song.wait()
 
@@ -203,13 +210,13 @@ class Music:
             'quiet': True,
         }
 
-        # if song.isdigit():
-        self.song = int(song)
-        # else:
-        #     for idx, item in enumerate(self.album.songs):
-        #         itemTitle = item[item.rfind('/') + 1:]
-        #         if song.lower() in itemTitle.lower():
-        #             self.song = idx
+        if song.isdigit():
+            self.song = int(song)
+        else:
+            for idx, item in enumerate(self.album.songs):
+                itemTitle = item[item.rfind('/') + 1:]
+                if song.lower() in itemTitle.lower():
+                    self.song = idx
 
         if state.voice is None:
             success = await ctx.invoke(self.summon)
@@ -224,9 +231,11 @@ class Music:
                 await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
             else:
                 entry = VoiceEntry(ctx.message, player)
-                # prettySong = self.album.songs[self.song][item.rfind('/') + 1:]
-                # await self.bot.say('Enqueued ' + prettySong[:prettySong.rfind('.')])
-                # await self.bot.say('Enqueued ' + state.current.player.url)
+                prettySong = self.album.songs[self.song][item.rfind('/') + 1:]
+                await self.bot.say('Enqueued ' + prettySong[:prettySong.rfind('.')])
+                entry.player.setName(prettySong[:prettySong.rfind('.')])
+                print (dir(entry.player))
+                print (vars(entry.player))
                 await state.songs.put(entry)
         else:
             await self.bot.send_message(ctx.message.channel, "No song matching your request was found.")
@@ -338,13 +347,17 @@ class Music:
         state = self.get_voice_state(ctx.message.server)
         print(state.current.player)
         if not hasattr(state.current.player, 'url'):
-            await self.bot.say('Not playing anything.')
+            if self.song != None:
+                skip_count = len(state.skip_votes)
+                song = self.album.songs[self.song]
+                prettySong = song[song.rfind('/') + 1:]
+                await self.bot.say('Now playing {} [skips: {}/3]'.format(prettySong[:prettySong.rfind('.')], skip_count))
+            else:
+                await self.bot.say('Not playing anything.')
         else:
             skip_count = len(state.skip_votes)
-            # song = self.album.songs[self.song]
-            # prettySong = song[song.rfind('/') + 1:]
-            # await self.bot.say('Now playing {} [skips: {}/3]'.format(prettySong[:prettySong.rfind('.')], skip_count))
-            await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current.player.url, skip_count))
+            if hasattr(state.current.player, 'url'):
+                await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current.player.url, skip_count))
 
     @commands.command(pass_context=True)
     async def list_songs(self, ctx):
