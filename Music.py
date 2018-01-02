@@ -128,20 +128,20 @@ class Music_Bot:
         """
         self.BEETS.import_files([self.MUSIC_DIR, ])
 
-    @commands.command(pass_context=True)
-    async def search(self, ctx, song_name):
-        query = "title: %"
-        query = query.replace('%', song_name)
-        items = self.BEETS.query([query])
-        fmt = []
-        for item in items:
-            fmt.append(item)
-        await self.bot.say(fmt)
+    #@commands.command(pass_context=True)
+    #async def search(self, ctx, song_name):
+        #query = "title: %"
+        #query = query.replace('%', song_name)
+        #items = self.BEETS.query([query])
+        #fmt = []
+        #for item in items:
+            #fmt.append(item)
+        #await self.bot.say(fmt)
 
-    @commands.command(pass_context=True)
-    async def list_all_songs(self):
-        items = self.BEETS.query()
-        await self.bot.say(items)
+    #@commands.command(pass_context=True)
+    #async def list_all_songs(self):
+        #items = self.BEETS.query()
+        #await self.bot.say(items)
 
     @commands.command(pass_context=True)
     async def join(self, ctx, *, channel : discord.Channel):
@@ -305,10 +305,37 @@ class Music_Bot:
     @commands.command(pass_context=True)
     async def playing(self, ctx):
         """Shows info about the currently played song."""
-
         state = self.get_voice_state(ctx.message.server)
-        if state.current is None:
-            await self.bot.say('Not playing anything.')
+        print(state.current.player)
+        if not hasattr(state.current.player, 'url'):
+            if self.song != None:
+                skip_count = len(state.skip_votes)
+                song = self.album.songs[self.song]
+                prettySong = song[song.rfind('/') + 1:]
+                await self.bot.say('Now playing {} [skips: {}/3]'.format(prettySong[:prettySong.rfind('.')], skip_count))
+            else:
+                await self.bot.say('Not playing anything.')
         else:
             skip_count = len(state.skip_votes)
-            await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current, skip_count))
+            if hasattr(state.current.player, 'url'):
+                await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current.player.url, skip_count))
+
+    @commands.command(pass_context=True)
+    async def list_songs(self, ctx):
+        """ Lists available songs for current album.
+        Same as !songs.
+        """
+        prettyAlbum = []
+        for item in self.album.songs:
+            prettyAlbum.append(item[item.rfind('/') + 1:])
+        await self.bot.send_message(ctx.message.channel, prettyAlbum)
+
+    @commands.command(pass_context=True)
+    async def songs(self, ctx):
+        """ Lists available songs for current album.
+        Same as !list_songs.
+        """
+        prettyAlbum = []
+        for item in self.album.songs:
+            prettyAlbum.append(item[item.rfind('/') + 1:])
+        await self.bot.send_message(ctx.message.channel, prettyAlbum)
