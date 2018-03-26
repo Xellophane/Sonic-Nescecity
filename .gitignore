@@ -139,13 +139,7 @@ $RECYCLE.BIN/
 *.lnk
 
 
-# Music files
-*.png
-*.mp3
-*Lyrics.txt
-*.url
-*.jpg
-*.txt
-
 # Database Files
 *.db
+# config file
+*.ini

@@ -1,0 +1,15 @@
+[Base Config]
+# The api key that you get from discord itself for your app will go here.
+API_KEY =
+
+# if you wish to move the music directory from it's default location, this
+# would be where.
+MUSIC_DIR = example/usr/music or C:\Users\username\Music
+
+# This will turn on the beets functionality. Half baked currently, use with care.
+# Off by default for now.
+BEETS_FUNCTIONALITY = False
+
+# If you are using the beets functionality, you can change the location for the
+# beets database here. Otherwise you can leave it blank to use the default.
+MUSIC_DATABASE =
