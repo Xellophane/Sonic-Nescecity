@@ -139,5 +139,7 @@ $RECYCLE.BIN/
 *.lnk
 
 
+# Database Files
+*.db
 # config file
 *.ini
