@@ -139,5 +139,5 @@ $RECYCLE.BIN/
 *.lnk
 
 
-# Password File
-Password.txt
+# config file
+*.ini
