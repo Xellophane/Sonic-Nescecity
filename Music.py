@@ -84,12 +84,15 @@ class Music_Bot:
     """Voice related commands.
     Works in multiple servers at once.
     """
-    def __init__(self, bot, music_path, music_database):
+    def __init__(self, bot, music_path, music_database, Beets):
         self.bot = bot
         self.voice_states = {}
+        self.music_path = music_path
+        self.music_database = music_database
+        self.BEETS = Beets
 
         # these are commented out while I sort out Beets Functionality
-        
+
         #self.album = None
         #self.library = Library()
         #self.this_file = os.path.dirname(__file__)
@@ -128,17 +131,23 @@ class Music_Bot:
         """Refresh the beets database
         CAUTION: LONG
         """
-        self.BEETS.import_files([self.MUSIC_DIR, ])
+        self.BEETS.import_files([self.music_path, ])
+        await self.bot.say("Database refreshed")
 
-    #@commands.command(pass_context=True)
-    #async def search(self, ctx, song_name):
-        #query = "title: %"
-        #query = query.replace('%', song_name)
-        #items = self.BEETS.query([query])
-        #fmt = []
-        #for item in items:
-            #fmt.append(item)
-        #await self.bot.say(fmt)
+    @commands.command(pass_context=True)
+    async def search(self, ctx, query: str):
+        query = query
+        items = self.BEETS.query(query)
+        fmt = []
+
+        for item in items:
+            string = "Results; {} by '{}'"
+            # string.format(item.title, item.album)
+            fmt.append(string.format(item.title, item.artist))
+            print("User performed search")
+            print(string.format(item.title, item.artist))
+
+        await self.bot.say(fmt)
 
     #@commands.command(pass_context=True)
     #async def list_all_songs(self):

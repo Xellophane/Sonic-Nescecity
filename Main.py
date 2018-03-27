@@ -39,12 +39,18 @@ MUSIC_DIRECTORY = baseconfig['MUSIC_DIR']
 # grab the api key
 API_KEY = baseconfig['API_KEY']
 
-# assign the database
-MUSIC_DATABASE = baseconfig['MUSIC_DATABASE']
+# Check if beets is enabled and assign the database if it is enabled.
+BEETS_FUNCTIONALITY = bool(baseconfig['BEETS_FUNCTIONALITY'])
+if BEETS_FUNCTIONALITY == True:
+    MUSIC_DATABASE = baseconfig['MUSIC_DATABASE']
+    BEETS = Beets(MUSIC_DATABASE)
+else:
+    MUSIC_DATABASE = None
+
 
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), description='A playlist example for discord.py')
-bot.add_cog(Music_Bot(bot, MUSIC_DIRECTORY, MUSIC_DATABASE))
+bot.add_cog(Music_Bot(bot, MUSIC_DIRECTORY, MUSIC_DATABASE, BEETS))
 
 @bot.event
 async def on_ready():
