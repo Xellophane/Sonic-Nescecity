@@ -1,0 +1,15 @@
+What is this repo?
+This is a personal repo to develop a jukebox bot that makes use of beets funcitonality to play and sort songs for a discord server.
+
+How does it work?
+Black Magic.
+In reality the magic is fueled by Discord.py, it's dependencies, and Beets.
+
+Who uses this?
+Currently myself.
+
+What is the goal?
+To provide a working bot to serve up music on demand for a discord server.
+
+How can I benefit from this?
+I honestly don't know. That is for you to find out?

@@ -6,6 +6,7 @@ import os.path
 import glob
 import configparser
 from discord.ext import commands
+
 from Music import Music_Bot
 from Beets import Beets
 
@@ -16,6 +17,7 @@ if not discord.opus.is_loaded():
     # opus library is located in and with the proper filename.
     # note that on windows this DLL is automatically provided for you
     discord.opus.load_opus('opus')
+
 
 
 # ConfigParser reads the files similaryly to a python dictionary.
@@ -37,11 +39,18 @@ MUSIC_DIRECTORY = baseconfig['MUSIC_DIR']
 # grab the api key
 API_KEY = baseconfig['API_KEY']
 
-# assign the database
-MUSIC_DATABASE = baseconfig['MUSIC_DATABASE']
+# Check if beets is enabled and assign the database if it is enabled.
+BEETS_FUNCTIONALITY = bool(baseconfig['BEETS_FUNCTIONALITY'])
+if BEETS_FUNCTIONALITY == True:
+    MUSIC_DATABASE = baseconfig['MUSIC_DATABASE']
+    BEETS = Beets(MUSIC_DATABASE)
+else:
+    MUSIC_DATABASE = None
+
+
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), description='A playlist example for discord.py')
-bot.add_cog(Music_Bot(bot))
+bot.add_cog(Music_Bot(bot, MUSIC_DIRECTORY, MUSIC_DATABASE, BEETS))
 
 @bot.event
 async def on_ready():

@@ -1,6 +1,9 @@
 import beets
 from beets import config
+from beets import library
 from beets import importer
+from beets import autotag
+
 from beets.ui import _open_library
 
 
@@ -23,7 +26,7 @@ class Beets(object):
         def choose_item(self, task):
             return importer.action.ASIS
 
-    def __init__(self, music_library_file_name):
+    def __init__(self, music_library_file_name=None):
         """ music_library_file_name = full path and name of
             music database to use """
         "configure to keep music in place and do not auto-tag"
@@ -51,5 +54,5 @@ class Beets(object):
         self.session.run()
 
     def query(self, query=None):
-        """return list of items from the music DB that match the given query"""
+        """ return list of items from the music DB that match the given query"""
         return self.lib.items(query)

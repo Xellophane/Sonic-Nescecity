@@ -80,6 +80,7 @@ celerybeat-schedule
 # virtualenv
 venv/
 ENV/
+Python/
 
 # Spyder project settings
 .spyderproject
@@ -138,6 +139,14 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Project Files
+# =========================
+
+# Database Files
+*.db
 
 # config file
 *.ini
+
+# Music Folder
+Music/*
