@@ -44,7 +44,7 @@ MUSIC_DATABASE = baseconfig['MUSIC_DATABASE']
 
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), description='A playlist example for discord.py')
-bot.add_cog(Music_Bot(bot))
+bot.add_cog(Music_Bot(bot, MUSIC_DIRECTORY, MUSIC_DATABASE))
 
 @bot.event
 async def on_ready():

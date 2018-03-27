@@ -1,6 +1,10 @@
 import beets
 from beets import config
+from beets import library
 from beets import importer
+from beets import ui
+from beets import autotag
+
 from beets.ui import _open_library
 
 
