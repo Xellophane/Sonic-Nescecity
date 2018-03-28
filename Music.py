@@ -2,29 +2,7 @@ import asyncio
 import discord
 import os
 import os.path
-import glob
 from discord.ext import commands
-
-
-music_path = 'A:\\Music'
-# music_directory = '/Music/'
-class Library:
-    """Object to hold all the albums"""
-    def __init__(self):
-        self.albums = os.listdir(music_path)
-        # self.albums = []
-
-class Album:
-    def __init__(self, name):
-        """Not too sure what I'm going to do with this class. If I make use of it,
-        it will be to allow the entire album to be loaded, queued, and maybe shuffled"""
-
-        self.name = name
-        self.music_directory = os.path.join(music_path, name, "MP3\\") # directory where the music is held. Note that python should convert to windows and unix
-        print(self.name)
-        # This should be the meat and potatoes, as it should grab everything in the albums FLAC/MP3 directory and put it into a list.
-
-        self.songs = glob.glob(self.music_directory + "*.mp3")
 
 
 
@@ -85,15 +63,12 @@ class Music_Bot:
     """Voice related commands.
     Works in multiple servers at once.
     """
-    def __init__(self, bot):
+    def __init__(self, bot, music_path, music_database, Beets):
         self.bot = bot
         self.voice_states = {}
-        self.album = None
-        self.library = Library()
-        self.this_file = os.path.dirname(__file__)
-        self.MUSIC_DIR = os.path.join(self.this_file, "Music")
-        self.DATABASE_FILE_NAME = os.path.join(self.this_file, "music.db")
-        # self.BEETS = Beets(self.DATABASE_FILE_NAME)
+        self.music_path = music_path
+        self.music_database = music_database
+        self.BEETS = Beets
 
     def get_voice_state(self, server):
         state = self.voice_states.get(server.id)
@@ -117,31 +92,24 @@ class Music_Bot:
             except:
                 pass
 
-    # @commands.command(pass_context=True)
-    # async def commands(self, ctx):
-        # pass
-
     @commands.command(pass_context=True)
-    async def refresh_database(self, ctx):
-        """Refresh the beets database
-        CAUTION: LONG
-        """
-        self.BEETS.import_files([self.MUSIC_DIR, ])
+    async def search(self, ctx, query: str):
+        """Searches music database for items that match the string given
+        May search for titles, album names, artists, genres, ect
+        To search specifically for albums, use !search "Album:Albumname" with quotes
+        To search for genres, !search "genre:genrename"
+        For a full list of items to search by, find Merl/Xellophane, and bug him to finish this poor soul with complete docs."""
+        query = query
+        items = self.BEETS.query(query)
+        fmt = []
+        print("User performed search")
+        for item in items:
+            string = "Results; {} by '{}'"
+            # string.format(item.title, item.album)
+            fmt.append(string.format(item.title, item.artist))
+            print(string.format(item.title, item.artist))
 
-    #@commands.command(pass_context=True)
-    #async def search(self, ctx, song_name):
-        #query = "title: %"
-        #query = query.replace('%', song_name)
-        #items = self.BEETS.query([query])
-        #fmt = []
-        #for item in items:
-            #fmt.append(item)
-        #await self.bot.say(fmt)
-
-    #@commands.command(pass_context=True)
-    #async def list_all_songs(self):
-        #items = self.BEETS.query()
-        #await self.bot.say(items)
+        await self.bot.say(fmt)
 
     @commands.command(pass_context=True)
     async def join(self, ctx, *, channel : discord.Channel):
@@ -177,28 +145,6 @@ class Music_Bot:
         await self.bot.logout()
 
     @commands.command(pass_context=True)
-    async def list_cwd(self, ctx):
-        """Returns all the files matching search entry"""
-        cwd = glob.glob('*.flac')
-        await self.bot.send_message(ctx.message.channel, glob.glob('*.flac'))
-
-    @commands.command(pass_context=True)
-    async def chalbum(self, ctx, albumnumber):
-        number = int(albumnumber)
-        """Changes the album to inputed album, does not do if album doesn't exist"""
-        self.album = Album(self.library.albums[number])
-        await self.bot.send_message(ctx.message.channel, os.listdir(self.album.music_directory))
-        # TODO: add in meta data for song titles.
-
-    @commands.command(pass_context=True)
-    async def list_albums(self, ctx):
-        await self.bot.send_message(ctx.message.channel, self.library.albums)
-
-    @commands.command(pass_context=True)
-    async def list_songs(self, ctx):
-        await self.bot.send_message(ctx.message.channel, self.album.songs)
-
-    @commands.command(pass_context=True)
     async def play(self, ctx, *, song : str):
         """Plays a song.
         If there is a song currently in the queue, then it is
@@ -228,7 +174,7 @@ class Music_Bot:
         else:
             entry = VoiceEntry(ctx.message, player)
             fmt = 'Playing ```py\n{}: {}\n```'
-            await self.bot.say('Enqueued ' + self.album.songs[self.song])
+            #await self.bot.say('Enqueued ' + self.album.songs[self.song])
             await state.songs.put(entry)
 
     @commands.command(pass_context=True)
@@ -319,23 +265,3 @@ class Music_Bot:
             skip_count = len(state.skip_votes)
             if hasattr(state.current.player, 'url'):
                 await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current.player.url, skip_count))
-
-    @commands.command(pass_context=True)
-    async def list_songs(self, ctx):
-        """ Lists available songs for current album.
-        Same as !songs.
-        """
-        prettyAlbum = []
-        for item in self.album.songs:
-            prettyAlbum.append(item[item.rfind('/') + 1:])
-        await self.bot.send_message(ctx.message.channel, prettyAlbum)
-
-    @commands.command(pass_context=True)
-    async def songs(self, ctx):
-        """ Lists available songs for current album.
-        Same as !list_songs.
-        """
-        prettyAlbum = []
-        for item in self.album.songs:
-            prettyAlbum.append(item[item.rfind('/') + 1:])
-        await self.bot.send_message(ctx.message.channel, prettyAlbum)
