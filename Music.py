@@ -102,12 +102,20 @@ class Music_Bot:
         query = query
         items = self.BEETS.query(query)
         fmt = []
+        count = 0
+        await self.bot.say("Results for " + query)
         print("User performed search")
         for item in items:
-            string = "Results; {} by '{}'"
-            # string.format(item.title, item.album)
+            string = "{} by '{}'"
+
+            count += len(string.format(item.title, item.artist))
             fmt.append(string.format(item.title, item.artist))
             print(string.format(item.title, item.artist))
+            if count >= 1500:
+                await self.bot.say(fmt)
+                fmt = []
+                print(count)
+                count = 0
 
         await self.bot.say(fmt)
 
@@ -136,7 +144,6 @@ class Music_Bot:
             state.voice = await self.bot.join_voice_channel(summoned_channel)
         else:
             await state.voice.move_to(summoned_channel)
-
         return True
 
     @commands.command(pass_context=True)
@@ -159,7 +166,11 @@ class Music_Bot:
             'default_search': 'auto',
             'quiet': True,
         }
-        self.song = int(song)
+        songs = []
+        song = song
+        items = self.BEETS.query(song)
+
+        self.song = items[0]
 
         if state.voice is None:
             success = await ctx.invoke(self.summon)
@@ -167,14 +178,14 @@ class Music_Bot:
                 return
 
         try:
-            player = state.voice.create_ffmpeg_player(self.album.songs[self.song], after=state.toggle_next)
+            player = state.voice.create_ffmpeg_player(str(self.song.path), after=state.toggle_next)
         except Exception as e:
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
             await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
         else:
             entry = VoiceEntry(ctx.message, player)
             fmt = 'Playing ```py\n{}: {}\n```'
-            #await self.bot.say('Enqueued ' + self.album.songs[self.song])
+            await self.bot.say('Enqueued ' + self.song.title)
             await state.songs.put(entry)
 
     @commands.command(pass_context=True)
@@ -256,9 +267,8 @@ class Music_Bot:
         if not hasattr(state.current.player, 'url'):
             if self.song != None:
                 skip_count = len(state.skip_votes)
-                song = self.album.songs[self.song]
-                prettySong = song[song.rfind('/') + 1:]
-                await self.bot.say('Now playing {} [skips: {}/3]'.format(prettySong[:prettySong.rfind('.')], skip_count))
+                song = self.song
+                await self.bot.say('Now playing {} [skips: {}/3]'.format(self.song.title, skip_count))
             else:
                 await self.bot.say('Not playing anything.')
         else:
