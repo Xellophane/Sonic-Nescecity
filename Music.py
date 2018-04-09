@@ -100,7 +100,7 @@ class Music_Bot:
         To search for genres, !search "genre:genrename"
         For a full list of items to search by, find Merl/Xellophane, and bug him to finish this poor soul with complete docs."""
         query = query
-        items = self.BEETS.query(query)
+        items = self.BEETS.query_items(query)
         fmt = []
         count = 0
         await self.bot.say("Results for " + query)
@@ -111,6 +111,44 @@ class Music_Bot:
             count += len(string.format(item.title, item.artist))
             fmt.append(string.format(item.title, item.artist))
             print(string.format(item.title, item.artist))
+            if count >= 1500:
+                await self.bot.say(fmt)
+                fmt = []
+                print(count)
+                count = 0
+
+        await self.bot.say(fmt)
+
+    @commands.command(pass_context=True)
+    async def albums(self, ctx):
+        """Lists all the available albums in the database"""
+        items = self.BEETS.query_albums()
+        fmt = []
+        count = 0
+        print("User Listing ALL albums")
+        for item in items:
+            string = "{} by '{}'"
+            # limit how many items can be strung together in a message
+            count += len(string.format(item.name, item.artist))
+            if count >= 1500:
+                await self.bot.say(fmt)
+                fmt = []
+                print(count)
+                count = 0
+
+        await self.bot.say(fmt)
+
+    @commands.command(pass_context=True)
+    async def all_songs(self, ctx):
+        """Lists all the available songs in the database"""
+        items = self.BEETS.query_items()
+        fmt = []
+        count = 0
+        print("User Listing ALL songs")
+        for item in items:
+            string = "{}"
+            # limit how many items can be strung together in a message
+            count += len(string.format(item.name))
             if count >= 1500:
                 await self.bot.say(fmt)
                 fmt = []
@@ -147,6 +185,16 @@ class Music_Bot:
         return True
 
     @commands.command(pass_context=True)
+    async def leave(self, ctx):
+        """forces the bot to leave the voice channel it is currently in."""
+
+        state = self.get_voice_state(ctx.message.server)
+        if state.voice is None:
+            await self.bot.say("I am not in a voice channel")
+        else:
+            await 
+
+    @commands.command(pass_context=True)
     async def banish(self, ctx):
         """Banish the bot from all servers it's a part of and logs it out"""
         await self.bot.logout()
@@ -170,7 +218,8 @@ class Music_Bot:
         song = song
         items = self.BEETS.query(song)
 
-        self.song = items[0]
+        if items[0]:
+            self.song = items[0]
 
         if state.voice is None:
             success = await ctx.invoke(self.summon)
