@@ -7,17 +7,15 @@ from discord.ext import commands
 
 
 class VoiceEntry:
-    def __init__(self, message, player):
+    def __init__(self, message, player, song = None):
         self.requester = message.author
         self.channel = message.channel
         self.player = player
+        self.song = song
 
     def __str__(self):
-        fmt = '{0.player} requested by {1.display_name}' # Something to do with strings? iono
-        # duration = self.player.duration
-        # if duration:
-            # fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
-        return fmt.format(self.player, self.requester)
+        fmt = '{0.title}, by {0.artist}. Requested by {1.display_name}' # string formats. Yay
+        return fmt.format(self.song, self.requester)
 
 # this class allows the bot to exist in multiple servers.
 class VoiceState:
@@ -160,7 +158,6 @@ class Music_Bot:
         The list of supported sites can be found here:
         https://rg3.github.io/youtube-dl/supportedsites.html
         """
-        print(song)
         state = self.get_voice_state(ctx.message.server)
         opts = {
             'default_search': 'auto',
@@ -178,12 +175,12 @@ class Music_Bot:
                 return
 
         try:
-            player = state.voice.create_ffmpeg_player(str(self.song.path), after=state.toggle_next)
+            player = state.voice.create_ffmpeg_player(self.song.path.decode(), after=state.toggle_next)
         except Exception as e:
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
             await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
         else:
-            entry = VoiceEntry(ctx.message, player)
+            entry = VoiceEntry(ctx.message, player, self.song)
             fmt = 'Playing ```py\n{}: {}\n```'
             await self.bot.say('Enqueued ' + self.song.title)
             await state.songs.put(entry)
