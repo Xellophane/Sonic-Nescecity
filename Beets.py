@@ -20,6 +20,10 @@ class Beets(object):
         # create/open the the beets library
         self.lib = _open_library(config)
 
-    def query(self, query=None):
+    def query_items(self, query=None):
         """return list of items from the music DB that match the given query"""
         return self.lib.items(query)
+
+    def query_albums(self, query=None):
+        """return list of albums from the music DB that match the given query"""
+        return self.lib.albums(query)
