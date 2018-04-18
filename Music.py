@@ -190,7 +190,7 @@ class Music_Bot:
         if state.voice is None:
             await self.bot.say("I am not in a voice channel")
         else:
-            await 
+            await state.voice.disconnect()
 
     @commands.command(pass_context=True)
     async def banish(self, ctx):
@@ -213,7 +213,7 @@ class Music_Bot:
         }
         songs = []
         song = song
-        items = self.BEETS.query(song)
+        items = self.BEETS.query_items(song)
 
         if items[0]:
             self.song = items[0]
