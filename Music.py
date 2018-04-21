@@ -127,7 +127,8 @@ class Music_Bot:
         for item in items:
             string = "{} by '{}'"
             # limit how many items can be strung together in a message
-            count += len(string.format(item.name, item.artist))
+            count += len(string.format(item.album, item.albumartist))
+            fmt.append(string.format(item.album, item.albumartist))
             if count >= 1500:
                 await self.bot.say(fmt)
                 fmt = []
@@ -144,9 +145,10 @@ class Music_Bot:
         count = 0
         print("User Listing ALL songs")
         for item in items:
-            string = "{}"
+            string = "{} by '{}'"
             # limit how many items can be strung together in a message
-            count += len(string.format(item.name))
+            fmt.append(string.format(item.title, item.artist))
+            count += len(string.format(item.title, item.artist))
             if count >= 1500:
                 await self.bot.say(fmt)
                 fmt = []
@@ -198,7 +200,7 @@ class Music_Bot:
         await self.bot.logout()
 
     @commands.command(pass_context=True)
-    async def play(self, ctx, *, song : str):
+    async def play(self, ctx, volume, *, song : str):
         """Plays a song.
         If there is a song currently in the queue, then it is
         queued until the next song is done playing.
@@ -225,6 +227,7 @@ class Music_Bot:
 
         try:
             player = state.voice.create_ffmpeg_player(self.song.path.decode(), after=state.toggle_next)
+            player.volume = int(volume) / 100
         except Exception as e:
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
             await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
@@ -314,7 +317,7 @@ class Music_Bot:
             if self.song != None:
                 skip_count = len(state.skip_votes)
                 song = self.song
-                await self.bot.say('Now playing {} [skips: {}/3]'.format(self.song.title, skip_count))
+                await self.bot.say('Now playing {} @ {:.0%} volume [skips: {}/3] '.format(self.song.title, skip_count))
             else:
                 await self.bot.say('Not playing anything.')
         else:
