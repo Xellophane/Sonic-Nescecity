@@ -7,17 +7,15 @@ from discord.ext import commands
 
 
 class VoiceEntry:
-    def __init__(self, message, player):
+    def __init__(self, message, player, song = None):
         self.requester = message.author
         self.channel = message.channel
         self.player = player
+        self.song = song
 
     def __str__(self):
-        fmt = '{0.player} requested by {1.display_name}' # Something to do with strings? iono
-        # duration = self.player.duration
-        # if duration:
-            # fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
-        return fmt.format(self.player, self.requester)
+        fmt = '{0.title}, by {0.artist}. Requested by {1.display_name}' # string formats. Yay
+        return fmt.format(self.song, self.requester)
 
 # this class allows the bot to exist in multiple servers.
 class VoiceState:
@@ -100,14 +98,62 @@ class Music_Bot:
         To search for genres, !search "genre:genrename"
         For a full list of items to search by, find Merl/Xellophane, and bug him to finish this poor soul with complete docs."""
         query = query
-        items = self.BEETS.query(query)
+        items = self.BEETS.query_items(query)
         fmt = []
+        count = 0
+        await self.bot.say("Results for " + query)
         print("User performed search")
         for item in items:
-            string = "Results; {} by '{}'"
-            # string.format(item.title, item.album)
+            string = "{} by '{}'"
+
+            count += len(string.format(item.title, item.artist))
             fmt.append(string.format(item.title, item.artist))
             print(string.format(item.title, item.artist))
+            if count >= 1500:
+                await self.bot.say(fmt)
+                fmt = []
+                print(count)
+                count = 0
+
+        await self.bot.say(fmt)
+
+    @commands.command(pass_context=True)
+    async def albums(self, ctx):
+        """Lists all the available albums in the database"""
+        items = self.BEETS.query_albums()
+        fmt = []
+        count = 0
+        print("User Listing ALL albums")
+        for item in items:
+            string = "{} by '{}'"
+            # limit how many items can be strung together in a message
+            count += len(string.format(item.album, item.albumartist))
+            fmt.append(string.format(item.album, item.albumartist))
+            if count >= 1500:
+                await self.bot.say(fmt)
+                fmt = []
+                print(count)
+                count = 0
+
+        await self.bot.say(fmt)
+
+    @commands.command(pass_context=True)
+    async def all_songs(self, ctx):
+        """Lists all the available songs in the database"""
+        items = self.BEETS.query_items()
+        fmt = []
+        count = 0
+        print("User Listing ALL songs")
+        for item in items:
+            string = "{} by '{}'"
+            # limit how many items can be strung together in a message
+            fmt.append(string.format(item.title, item.artist))
+            count += len(string.format(item.title, item.artist))
+            if count >= 1500:
+                await self.bot.say(fmt)
+                fmt = []
+                print(count)
+                count = 0
 
         await self.bot.say(fmt)
 
@@ -136,8 +182,17 @@ class Music_Bot:
             state.voice = await self.bot.join_voice_channel(summoned_channel)
         else:
             await state.voice.move_to(summoned_channel)
-
         return True
+
+    @commands.command(pass_context=True)
+    async def leave(self, ctx):
+        """forces the bot to leave the voice channel it is currently in."""
+
+        state = self.get_voice_state(ctx.message.server)
+        if state.voice is None:
+            await self.bot.say("I am not in a voice channel")
+        else:
+            await state.voice.disconnect()
 
     @commands.command(pass_context=True)
     async def banish(self, ctx):
@@ -145,7 +200,7 @@ class Music_Bot:
         await self.bot.logout()
 
     @commands.command(pass_context=True)
-    async def play(self, ctx, *, song : str):
+    async def play(self, ctx, volume, *, song : str):
         """Plays a song.
         If there is a song currently in the queue, then it is
         queued until the next song is done playing.
@@ -153,13 +208,17 @@ class Music_Bot:
         The list of supported sites can be found here:
         https://rg3.github.io/youtube-dl/supportedsites.html
         """
-        print(song)
         state = self.get_voice_state(ctx.message.server)
         opts = {
             'default_search': 'auto',
             'quiet': True,
         }
-        self.song = int(song)
+        songs = []
+        song = song
+        items = self.BEETS.query_items(song)
+
+        if items[0]:
+            self.song = items[0]
 
         if state.voice is None:
             success = await ctx.invoke(self.summon)
@@ -167,14 +226,15 @@ class Music_Bot:
                 return
 
         try:
-            player = state.voice.create_ffmpeg_player(self.album.songs[self.song], after=state.toggle_next)
+            player = state.voice.create_ffmpeg_player(self.song.path.decode(), after=state.toggle_next)
+            player.volume = int(volume) / 100
         except Exception as e:
             fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
             await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
         else:
-            entry = VoiceEntry(ctx.message, player)
+            entry = VoiceEntry(ctx.message, player, self.song)
             fmt = 'Playing ```py\n{}: {}\n```'
-            #await self.bot.say('Enqueued ' + self.album.songs[self.song])
+            await self.bot.say('Enqueued ' + self.song.title)
             await state.songs.put(entry)
 
     @commands.command(pass_context=True)
@@ -256,9 +316,8 @@ class Music_Bot:
         if not hasattr(state.current.player, 'url'):
             if self.song != None:
                 skip_count = len(state.skip_votes)
-                song = self.album.songs[self.song]
-                prettySong = song[song.rfind('/') + 1:]
-                await self.bot.say('Now playing {} [skips: {}/3]'.format(prettySong[:prettySong.rfind('.')], skip_count))
+                song = self.song
+                await self.bot.say('Now playing {} @ {:.0%} volume [skips: {}/3] '.format(self.song.title, skip_count))
             else:
                 await self.bot.say('Not playing anything.')
         else:
